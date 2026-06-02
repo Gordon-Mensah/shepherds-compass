@@ -40,7 +40,7 @@ export default function FirstTimers() {
   if (loading) return <Loader />;
 
   return (
-    <div style={{ flex: 1, padding: 32, overflowY: 'auto' }}>
+    <div style={{ flex: 1, padding: 'clamp(16px, 4vw, 32px)', overflowY: 'auto' }}>
       <PageHeader
         title="First Timers"
         subtitle={`${firstTimers.length} first timer${firstTimers.length !== 1 ? 's' : ''} recorded`}

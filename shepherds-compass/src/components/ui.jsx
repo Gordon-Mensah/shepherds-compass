@@ -53,12 +53,12 @@ export function Btn({ children, onClick, variant = 'primary', size = 'md', disab
 
 export function PageHeader({ title, subtitle, actions }) {
   return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 28 }}>
-      <div>
-        <h1 style={{ fontSize: 28, fontWeight: 700, lineHeight: 1.1 }}>{title}</h1>
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 28, flexWrap: 'wrap', gap: 12 }}>
+      <div style={{ minWidth: 0 }}>
+        <h1 style={{ fontSize: 'clamp(20px, 5vw, 28px)', fontWeight: 700, lineHeight: 1.1 }}>{title}</h1>
         {subtitle && <p style={{ color: 'var(--text2)', marginTop: 4, fontSize: 13 }}>{subtitle}</p>}
       </div>
-      {actions && <div style={{ display: 'flex', gap: 8 }}>{actions}</div>}
+      {actions && <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>{actions}</div>}
     </div>
   );
 }
@@ -79,14 +79,14 @@ export function Modal({ title, onClose, children }) {
   return (
     <div style={{
       position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)',
-      display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000,
-      padding: 20,
+      display: 'flex', alignItems: 'flex-end', justifyContent: 'center', zIndex: 1000,
+      padding: 0,
     }} onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
       <div style={{
         background: 'var(--bg2)', border: '1px solid var(--border)',
-        borderRadius: 14, width: '100%', maxWidth: 560, maxHeight: '90vh',
-        overflowY: 'auto', padding: 28,
-        boxShadow: '0 20px 60px rgba(0,0,0,0.6)',
+        borderRadius: '14px 14px 0 0', width: '100%', maxWidth: 560, maxHeight: '90vh',
+        overflowY: 'auto', padding: 'clamp(16px, 4vw, 28px)',
+        boxShadow: '0 -10px 60px rgba(0,0,0,0.6)',
       }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
           <h2 style={{ fontSize: 20 }}>{title}</h2>

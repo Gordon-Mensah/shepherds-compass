@@ -14,7 +14,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <Sidebar />
-      <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', minWidth: 0 }}>
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/shepherds" element={<ShepherdsList />} />

@@ -39,7 +39,7 @@ export function ShepherdsList() {
   if (loading) return <Loader />;
 
   return (
-    <div style={{ flex: 1, padding: 32, overflowY: 'auto' }}>
+    <div style={{ flex: 1, padding: 'clamp(16px, 4vw, 32px)', overflowY: 'auto' }}>
       <PageHeader title="Shepherds" subtitle={`${shepherds.length} shepherd${shepherds.length !== 1 ? 's' : ''} registered`}
         actions={<Btn onClick={() => setShowModal(true)}><Plus size={14} /> Add Shepherd</Btn>}
       />
@@ -142,7 +142,7 @@ export function ShepherdDetail() {
   ];
 
   return (
-    <div style={{ flex: 1, padding: 32, overflowY: 'auto' }}>
+    <div style={{ flex: 1, padding: 'clamp(16px, 4vw, 32px)', overflowY: 'auto' }}>
       <button onClick={() => navigate('/shepherds')} style={{ background: 'none', color: 'var(--text2)', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 20, cursor: 'pointer', fontSize: 13 }}>
         <ArrowLeft size={14} /> Back to Shepherds
       </button>

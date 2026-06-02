@@ -62,3 +62,121 @@ select option { background: var(--bg3); }
 
 ::-webkit-scrollbar { width: 5px; }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+
+/* ── Mobile responsiveness ─────────────────────────────────────────── */
+
+.sidebar-desktop {
+  width: var(--sidebar-w);
+  background: var(--bg2);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  height: 100vh;
+  position: sticky;
+  top: 0;
+}
+
+.mobile-topbar {
+  display: none;
+}
+
+.mobile-bottomnav {
+  display: none;
+}
+
+/* Page content padding helper */
+.page-content {
+  flex: 1;
+  padding: 32px;
+  overflow-y: auto;
+}
+
+@media (max-width: 768px) {
+  :root {
+    --sidebar-w: 0px;
+  }
+
+  #root {
+    flex-direction: column;
+  }
+
+  .sidebar-desktop {
+    display: none;
+  }
+
+  .mobile-topbar {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 14px 16px 12px;
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    flex-shrink: 0;
+  }
+
+  .mobile-bottomnav {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--bg2);
+    border-top: 1px solid var(--border);
+    z-index: 100;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  /* Give all pages bottom padding so content isn't hidden under bottom nav */
+  #root > div > div {
+    padding-bottom: 80px !important;
+  }
+
+  /* Tighten page padding on mobile */
+  div[style*="padding: 32px"],
+  div[style*="padding: '32px'"] {
+    padding: 16px !important;
+  }
+
+  /* Stack dashboard 2-col grid to 1 col */
+  div[style*="gridTemplateColumns: '1fr 1fr'"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* PageHeader — stack title and action button */
+  div[style*="justifyContent: 'space-between'"][style*="alignItems: 'flex-start'"] {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  /* Make search + filter wrap on mobile */
+  div[style*="display: 'flex'"][style*="gap: 12"] {
+    flex-wrap: wrap;
+  }
+
+  /* Full width search on mobile */
+  div[style*="maxWidth: 300"] {
+    max-width: 100% !important;
+  }
+
+  /* Modal full screen on mobile */
+  div[style*="maxWidth: 560"] {
+    max-width: 100% !important;
+    max-height: 100% !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+  }
+
+  div[style*="alignItems: 'center'"][style*="justifyContent: 'center'"][style*="position: 'fixed'"] {
+    align-items: flex-end !important;
+    padding: 0 !important;
+  }
+
+  /* Shepherd detail: stack the two-column layout */
+  div[style*="display: 'flex'"][style*="gap: 24"] {
+    flex-direction: column !important;
+  }
+}

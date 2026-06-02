@@ -45,7 +45,7 @@ export default function Dashboard() {
   const statusColor = { pending: 'var(--amber)', in_progress: 'var(--blue)', done: 'var(--green)' };
 
   return (
-    <div style={{ flex: 1, padding: '32px', overflowY: 'auto' }}>
+    <div style={{ flex: 1, padding: 'clamp(16px, 4vw, 32px)', overflowY: 'auto' }}>
       <PageHeader
         title="Good Shepherd's Overview"
         subtitle={`Welcome back, Chief Shepherd. Here's what's happening today.`}
@@ -60,7 +60,7 @@ export default function Dashboard() {
         <StatBox label="Tasks Pending" value={stats.pendingTasks || 0} icon={<Clock size={20} />} color="var(--red)" />
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20 }}>
         <Card>
           <h3 style={{ fontSize: 16, marginBottom: 16 }}>Recent Tasks</h3>
           {recentTasks.length === 0 ? (

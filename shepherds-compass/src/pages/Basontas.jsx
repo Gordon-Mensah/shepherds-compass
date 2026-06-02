@@ -30,7 +30,7 @@ export function BasonstasList() {
   const colors = ['var(--gold)', 'var(--blue)', 'var(--green)', 'var(--amber)', 'var(--red)', 'var(--text2)', 'var(--gold2)'];
 
   return (
-    <div style={{ flex: 1, padding: 32, overflowY: 'auto' }}>
+    <div style={{ flex: 1, padding: 'clamp(16px, 4vw, 32px)', overflowY: 'auto' }}>
       <PageHeader title="Basontas" subtitle="Church activity groups and ministries" />
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 16 }}>
         {BASONTAS.map((b, i) => (
@@ -88,7 +88,7 @@ export function BasontaDetail() {
   if (loading) return <Loader />;
 
   return (
-    <div style={{ flex: 1, padding: 32, overflowY: 'auto' }}>
+    <div style={{ flex: 1, padding: 'clamp(16px, 4vw, 32px)', overflowY: 'auto' }}>
       <button onClick={() => navigate('/basontas')} style={{ background: 'none', color: 'var(--text2)', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 20, cursor: 'pointer', fontSize: 13 }}>
         <ArrowLeft size={14} /> Back to Basontas
       </button>

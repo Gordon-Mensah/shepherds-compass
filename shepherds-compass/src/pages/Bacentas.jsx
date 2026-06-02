@@ -32,7 +32,7 @@ export function BacentasList() {
   if (loading) return <Loader />;
 
   return (
-    <div style={{ flex: 1, padding: 32, overflowY: 'auto' }}>
+    <div style={{ flex: 1, padding: 'clamp(16px, 4vw, 32px)', overflowY: 'auto' }}>
       <PageHeader title="Bacentas" subtitle="Home Bible study groups"
         actions={<Btn onClick={() => setShowModal(true)}><Plus size={14} /> Add Bacenta</Btn>}
       />
@@ -100,7 +100,7 @@ export function BacentaDetail() {
   if (!bacenta) return <p style={{ padding: 32 }}>Bacenta not found.</p>;
 
   return (
-    <div style={{ flex: 1, padding: 32, overflowY: 'auto' }}>
+    <div style={{ flex: 1, padding: 'clamp(16px, 4vw, 32px)', overflowY: 'auto' }}>
       <button onClick={() => navigate('/bacentas')} style={{ background: 'none', color: 'var(--text2)', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 20, cursor: 'pointer', fontSize: 13 }}>
         <ArrowLeft size={14} /> Back to Bacentas
       </button>
@@ -108,7 +108,7 @@ export function BacentaDetail() {
         actions={<Btn size="sm" onClick={() => setShowReportModal(true)}><Plus size={12} /> Add Monthly Report</Btn>}
       />
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 24 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20, marginBottom: 24 }}>
         <Card>
           <h4 style={{ fontSize: 14, marginBottom: 12, color: 'var(--text2)' }}>Shepherds ({shepherds.length})</h4>
           {shepherds.map(s => (

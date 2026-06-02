@@ -49,7 +49,7 @@ export function SheepList() {
   if (loading) return <Loader />;
 
   return (
-    <div style={{ flex: 1, padding: 32, overflowY: 'auto' }}>
+    <div style={{ flex: 1, padding: 'clamp(16px, 4vw, 32px)', overflowY: 'auto' }}>
       <PageHeader title="Sheep (Members)" subtitle={`${sheep.length} registered members`}
         actions={<Btn onClick={() => setShowModal(true)}><Plus size={14} /> Add Member</Btn>}
       />
@@ -132,7 +132,7 @@ export function SheepDetail() {
   if (!member) return <p style={{ padding: 32, color: 'var(--text2)' }}>Member not found.</p>;
 
   return (
-    <div style={{ flex: 1, padding: 32, overflowY: 'auto' }}>
+    <div style={{ flex: 1, padding: 'clamp(16px, 4vw, 32px)', overflowY: 'auto' }}>
       <button onClick={() => navigate('/sheep')} style={{ background: 'none', color: 'var(--text2)', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 20, cursor: 'pointer', fontSize: 13 }}>
         <ArrowLeft size={14} /> Back to Members
       </button>
@@ -149,7 +149,7 @@ export function SheepDetail() {
         <Btn size="sm" variant="ghost" onClick={() => setShowVisitModal(true)}><Plus size={12} /> Add Visit Report</Btn>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 24 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16, marginBottom: 24 }}>
         <Card>
           <h4 style={{ fontSize: 14, marginBottom: 12, color: 'var(--text2)' }}>Member Info</h4>
           {[
