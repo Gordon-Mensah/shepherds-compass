@@ -1,0 +1,64 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0b0f14;
+  --bg2: #111720;
+  --bg3: #182030;
+  --surface: #1a2538;
+  --surface2: #223049;
+  --border: #2a3f5f;
+  --border2: #3a5070;
+  --gold: #c9a84c;
+  --gold2: #e8c86a;
+  --gold-dim: rgba(201,168,76,0.15);
+  --gold-glow: rgba(201,168,76,0.08);
+  --text: #e8e4da;
+  --text2: #a8b4c4;
+  --text3: #6a7f98;
+  --green: #4caf82;
+  --green-dim: rgba(76,175,130,0.15);
+  --red: #e05c5c;
+  --red-dim: rgba(224,92,92,0.15);
+  --amber: #e09a3c;
+  --amber-dim: rgba(224,154,60,0.15);
+  --blue: #5b8dee;
+  --blue-dim: rgba(91,141,238,0.15);
+  --sidebar-w: 240px;
+  --radius: 10px;
+  --shadow: 0 4px 20px rgba(0,0,0,0.4);
+}
+
+html, body { height: 100%; background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 14px; line-height: 1.6; }
+
+#root { height: 100%; display: flex; }
+
+h1, h2, h3, h4 { font-family: 'Cormorant Garamond', serif; font-weight: 600; color: var(--text); }
+
+a { text-decoration: none; color: inherit; }
+
+button { cursor: pointer; font-family: 'DM Sans', sans-serif; border: none; outline: none; }
+
+input, textarea, select {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 13px;
+  outline: none;
+  width: 100%;
+  transition: border-color 0.2s;
+}
+input:focus, textarea:focus, select:focus { border-color: var(--gold); }
+textarea { resize: vertical; min-height: 80px; }
+select option { background: var(--bg3); }
+
+.scrollbar::-webkit-scrollbar { width: 5px; }
+.scrollbar::-webkit-scrollbar-track { background: transparent; }
+.scrollbar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
