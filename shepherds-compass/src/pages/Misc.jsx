@@ -29,7 +29,7 @@ export function Campaigns() {
   if (loading) return <Loader />;
 
   return (
-    <div style={{ flex: 1, padding: 'clamp(16px, 4vw, 32px)', overflowY: 'auto' }}>
+    <div style={{ flex: 1, padding: 32, overflowY: 'auto' }}>
       <PageHeader title="Campaigns" subtitle="Church evangelism and outreach campaigns"
         actions={<Btn onClick={() => setShowModal(true)}><Plus size={14} /> New Campaign</Btn>}
       />
@@ -79,7 +79,7 @@ function CampaignForm({ onSave, onClose }) {
           <option value="completed">Completed</option>
         </select>
       </FormField>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 12 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
         <FormField label="Start Date"><input type="date" value={form.start_date} onChange={s('start_date')} /></FormField>
         <FormField label="End Date"><input type="date" value={form.end_date} onChange={s('end_date')} /></FormField>
       </div>
@@ -100,7 +100,7 @@ export function Settings() {
   }
 
   return (
-    <div style={{ flex: 1, padding: 'clamp(16px, 4vw, 32px)', overflowY: 'auto' }}>
+    <div style={{ flex: 1, padding: 32, overflowY: 'auto' }}>
       <PageHeader title="Settings" subtitle="Configure your system" />
 
       <div style={{ maxWidth: 520 }}>

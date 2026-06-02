@@ -1,4 +1,14 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  useEffect(() => {
+    const fn = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', fn);
+    return () => window.removeEventListener('resize', fn);
+  }, []);
+  return isMobile;
+}
 import { supabase } from '../supabase';
 import { askGroq } from '../groq';
 import { runAgent } from '../groqTools';
@@ -180,11 +190,14 @@ export default function Chat() {
   const [mode, setMode] = useState('chat');
   const [showMemory, setShowMemory] = useState(false);
   const [showSidebar, setShowSidebar] = useState(true);
+  const isMobile = useIsMobile();
 
   const [attachedFile, setAttachedFile] = useState(null);
   const [fileLoading, setFileLoading] = useState(false);
   const [fileError, setFileError] = useState('');
   const [actionMap, setActionMap] = useState({});
+  const [editingIndex, setEditingIndex] = useState(null);
+  const [editText, setEditText] = useState('');
 
   const bottomRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -321,6 +334,55 @@ export default function Chat() {
     setSessions(prev => prev.map(s => s.id === sessionId ? { ...s, updated_at: new Date().toISOString() } : s).sort((a,b) => new Date(b.updated_at) - new Date(a.updated_at)));
   }
 
+  async function editMessage(index) {
+    if (!activeSessionId) return;
+    const newText = editText.trim();
+    if (!newText) return;
+
+    // Delete all messages from this index onwards in DB
+    const toDelete = messages.slice(index);
+    for (const m of toDelete) {
+      if (m.id) await supabase.from('chat_history').delete().eq('id', m.id);
+    }
+
+    // Trim local state
+    const trimmed = messages.slice(0, index);
+    setMessages(trimmed);
+    setActionMap(prev => {
+      const next = {};
+      Object.entries(prev).forEach(([k, v]) => { if (parseInt(k) < index) next[k] = v; });
+      return next;
+    });
+    setEditingIndex(null);
+    setEditText('');
+
+    // Re-send as new message
+    const userMsg = { role: 'user', content: newText, created_at: new Date().toISOString(), session_id: activeSessionId };
+    setMessages([...trimmed, userMsg]);
+    await supabase.from('chat_history').insert({ role: 'user', content: newText, session_id: activeSessionId });
+
+    setLoading(true);
+    let assistantContent = '', actions = [];
+    if (mode === 'agent') {
+      const result = await runAgent(newText, trimmed);
+      assistantContent = result.success ? result.reply : `⚠️ ${result.reply}`;
+      actions = result.actions || [];
+    } else {
+      const result = await askGroq(newText, trimmed);
+      assistantContent = result.success ? result.reply : `⚠️ Error: ${result.error}`;
+    }
+    setLoading(false);
+
+    const assistantMsg = { role: 'assistant', content: assistantContent, created_at: new Date().toISOString(), session_id: activeSessionId };
+    setMessages(prev => {
+      const next = [...prev, assistantMsg];
+      if (actions.length > 0) setActionMap(m => ({ ...m, [next.length - 1]: actions }));
+      return next;
+    });
+    await supabase.from('chat_history').insert({ role: 'assistant', content: assistantContent, session_id: activeSessionId });
+    await supabase.from('chat_sessions').update({ updated_at: new Date().toISOString() }).eq('id', activeSessionId);
+  }
+
   const SUGGESTIONS_CHAT = ["How are my shepherds performing this month?", "Which shepherd has the most pending tasks?", "What should I focus on this week?"];
   const SUGGESTIONS_AGENT = ["Show me all sheep with no shepherd assigned", "List all shepherds and their bacentas", "How many sheep are in each bacenta?"];
   const suggestions = mode === 'agent' ? SUGGESTIONS_AGENT : SUGGESTIONS_CHAT;
@@ -329,13 +391,26 @@ export default function Chat() {
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'row', height: '100%', minHeight: 0, overflow: 'hidden' }}>
 
-      {/* Sessions sidebar — hidden on mobile */}
-      <div className="chat-sessions-sidebar" style={{ display: showSidebar ? 'flex' : 'none' }}>
+      {/* Sessions sidebar — drawer on mobile, inline on desktop */}
+      {isMobile && showSidebar && (
+        <div onClick={() => setShowSidebar(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 200 }} />
+      )}
+      <div style={{
+        ...(isMobile ? {
+          position: 'fixed', top: 0, left: 0, bottom: 0, zIndex: 201,
+          transform: showSidebar ? 'translateX(0)' : 'translateX(-100%)',
+          transition: 'transform 0.25s ease',
+          boxShadow: showSidebar ? '4px 0 24px rgba(0,0,0,0.5)' : 'none',
+        } : {
+          display: showSidebar ? 'flex' : 'none',
+        }),
+        flexDirection: 'column',
+      }}>
         <SessionsSidebar
           sessions={sessions}
           activeId={activeSessionId}
-          onSelect={openSession}
-          onNew={newChat}
+          onSelect={(id) => { openSession(id); if (isMobile) setShowSidebar(false); }}
+          onNew={() => { newChat(); if (isMobile) setShowSidebar(false); }}
           onDelete={deleteSession}
         />
       </div>
@@ -401,10 +476,30 @@ export default function Chat() {
 
               {messages.map((msg, i) => (
                 <div key={i}>
-                  <div style={{ display: 'flex', justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start' }}>
-                    <div style={{ maxWidth: '72%', padding: '11px 15px', borderRadius: msg.role === 'user' ? '18px 18px 4px 18px' : '18px 18px 18px 4px', background: msg.role === 'user' ? 'var(--gold)' : 'var(--surface)', color: msg.role === 'user' ? '#0b0f14' : 'var(--text)', border: msg.role === 'assistant' ? '1px solid var(--border)' : 'none', fontSize: 13, lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>
-                      {msg.content}
-                    </div>
+                  <div style={{ display: 'flex', justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start', flexDirection: 'column', alignItems: msg.role === 'user' ? 'flex-end' : 'flex-start' }}>
+                    {editingIndex === i ? (
+                      <div style={{ maxWidth: '72%', width: '100%' }}>
+                        <textarea
+                          value={editText}
+                          onChange={e => setEditText(e.target.value)}
+                          onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); editMessage(i); } if (e.key === 'Escape') { setEditingIndex(null); setEditText(''); } }}
+                          autoFocus
+                          style={{ width: '100%', borderRadius: 12, padding: '10px 14px', fontSize: 13, lineHeight: 1.6, minHeight: 70, borderColor: 'var(--gold)', resize: 'none' }}
+                        />
+                        <div style={{ display: 'flex', gap: 8, marginTop: 6, justifyContent: 'flex-end' }}>
+                          <button onClick={() => { setEditingIndex(null); setEditText(''); }} style={{ padding: '5px 12px', borderRadius: 8, background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text2)', fontSize: 12 }}>Cancel</button>
+                          <button onClick={() => editMessage(i)} style={{ padding: '5px 14px', borderRadius: 8, background: 'var(--gold)', border: 'none', color: '#0b0f14', fontSize: 12, fontWeight: 600 }}>Send</button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div
+                        style={{ maxWidth: '72%', padding: '11px 15px', borderRadius: msg.role === 'user' ? '18px 18px 4px 18px' : '18px 18px 18px 4px', background: msg.role === 'user' ? 'var(--gold)' : 'var(--surface)', color: msg.role === 'user' ? '#0b0f14' : 'var(--text)', border: msg.role === 'assistant' ? '1px solid var(--border)' : 'none', fontSize: 13, lineHeight: 1.7, whiteSpace: 'pre-wrap', cursor: msg.role === 'user' ? 'pointer' : 'default' }}
+                        title={msg.role === 'user' ? 'Click to edit' : ''}
+                        onClick={() => { if (msg.role === 'user' && !loading) { setEditingIndex(i); setEditText(msg.content.replace(/\n\n📎 .+$/, '')); } }}
+                      >
+                        {msg.content}
+                      </div>
+                    )}
                   </div>
                   {msg.role === 'assistant' && actionMap[i] && (
                     <div style={{ display: 'flex', justifyContent: 'flex-start', marginTop: 4 }}>

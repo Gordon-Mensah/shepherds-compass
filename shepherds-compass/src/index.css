@@ -99,6 +99,13 @@ select option { background: var(--bg3); }
 
   #root {
     flex-direction: column;
+    height: 100dvh;
+  }
+
+  #root > div {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
   }
 
   .sidebar-desktop {

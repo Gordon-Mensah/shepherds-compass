@@ -8,13 +8,14 @@ import { BacentasList, BacentaDetail } from './pages/Bacentas';
 import { BasonstasList, BasontaDetail } from './pages/Basontas';
 import FirstTimers from './pages/FirstTimers';
 import Chat from './pages/Chat';
-import { Campaigns, Settings } from './pages/Misc';
+import { CampaignsList, CampaignDetail } from './pages/Campaigns';
+import { Settings } from './pages/Misc';
 
 export default function App() {
   return (
     <BrowserRouter>
       <Sidebar />
-      <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+      <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/shepherds" element={<ShepherdsList />} />
@@ -26,7 +27,8 @@ export default function App() {
           <Route path="/basontas" element={<BasonstasList />} />
           <Route path="/basontas/:name" element={<BasontaDetail />} />
           <Route path="/first-timers" element={<FirstTimers />} />
-          <Route path="/campaigns" element={<Campaigns />} />
+          <Route path="/campaigns" element={<CampaignsList />} />
+          <Route path="/campaigns/:id" element={<CampaignDetail />} />
           <Route path="/chat" element={<Chat />} />
           <Route path="/settings" element={<Settings />} />
         </Routes>
