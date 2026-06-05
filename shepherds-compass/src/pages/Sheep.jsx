@@ -2,6 +2,7 @@ import SectionChat from '../components/SectionChat';
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../supabase';
+import { useDbRefresh } from '../useDbRefresh';
 import { BASONTAS } from '../constants';
 import { Card, Badge, Btn, PageHeader, Modal, FormField, EmptyState, Loader } from '../components/ui';
 import { Plus, ArrowLeft, Search, Upload, AlertCircle } from 'lucide-react';
@@ -52,6 +53,7 @@ export function SheepList() {
   const navigate = useNavigate();
 
   useEffect(() => { load(); }, []);
+  useDbRefresh(load, 'sheep');
 
   async function load() {
     setLoading(true);
