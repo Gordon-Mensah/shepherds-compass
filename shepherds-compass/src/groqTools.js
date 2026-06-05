@@ -49,7 +49,7 @@ async function groqFetch(body) {
 // ── Allowed tables & their writable columns ───────────────────────────────────
 const TABLE_COLUMNS = {
   sheep: ['name', 'phone', 'email', 'address', 'bacenta_id', 'shepherd_id', 'basonta', 'first_timer', 'first_timer_date', 'is_active', 'notes'],
-  shepherds: ['name', 'phone', 'address', 'email', 'bacenta_id', 'role', 'notes'],
+  shepherds: ['name', 'phone', 'address', 'email', 'bacenta_id', 'role', 'basonta', 'basonta_role', 'notes'],
   bacentas: ['name', 'location', 'notes'],
   shepherd_tasks: ['shepherd_id', 'title', 'description', 'task_type', 'status', 'due_date'],
   sheep_visits: ['sheep_id', 'shepherd_id', 'visit_type', 'report', 'visited_at'],
@@ -282,7 +282,7 @@ You have tools to read and write the database. Use them to fulfil the Chief Shep
 
 Database tables:
 - sheep: church members (fields: name, phone, email, address, bacenta_id, shepherd_id, basonta, first_timer, is_active, notes)
-- shepherds: church leaders (fields: name, phone, address, email, bacenta_id, role ['shepherd'|'leader'], notes)
+- shepherds: church leaders (fields: name, phone, address, email, bacenta_id, role ['shepherd'|'leader'], basonta [activity group name], basonta_role ['member'|'basonta_shepherd'], notes). A shepherd is also a church member — they can belong to a bacenta and a basonta. When updating a shepherd's name/phone/email, also update the matching sheep record.
 - bacentas: home Bible study groups (fields: name, location, notes)
 - shepherd_tasks: tasks for shepherds (fields: shepherd_id, title, description, task_type, status ['pending'|'in_progress'|'done'], due_date)
 - sheep_visits: visit records (fields: sheep_id, shepherd_id, visit_type, report, visited_at)
