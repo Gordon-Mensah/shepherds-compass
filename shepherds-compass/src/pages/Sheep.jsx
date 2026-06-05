@@ -55,19 +55,18 @@ export function SheepList() {
   useEffect(() => { load(); }, []);
   useDbRefresh(load, 'sheep');
 
-  async function load() {
-    setLoading(true);
-    const [{ data: sp }, { data: sh }, { data: bac }] = await Promise.all([
-      supabase.from('sheep').select('*, shepherds(name), bacentas(name)').order('name'),
-      supabase.from('shepherds').select('id, name').order('name'),
-      supabase.from('bacentas').select('id, name').order('name'),
-    ]);
-    setSheep(sp || []);
-    setShepherds(sh || []);
-    setBacentas(bac || []);
-    setLoading(false);
-  }
-
+async function load() {
+  setLoading(true);
+  const { data: sp, error } = await supabase.from('sheep').select('*, shepherds(name), bacentas(name)').order('name');
+  console.log('sheep data:', sp);
+  console.log('sheep error:', error);
+  const { data: sh } = await supabase.from('shepherds').select('id, name').order('name');
+  const { data: bac } = await supabase.from('bacentas').select('id, name').order('name');
+  setSheep(sp || []);
+  setShepherds(sh || []);
+  setBacentas(bac || []);
+  setLoading(false);
+}
   async function addSheep(data) {
     await supabase.from('sheep').insert(data);
     setShowModal(false);
