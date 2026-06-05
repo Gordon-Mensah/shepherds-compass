@@ -74,8 +74,9 @@ export function ShepherdsList() {
 
     if (error) { console.error(error); return; }
 
-    // 2. Link sheep record to new shepherd_id so they stay a member too
-    await supabase.from('sheep').update({ shepherd_id: newShepherd.id }).eq('id', sheepId);
+    // 2. Mark the sheep record: is_shepherd=true hides them from the Members list
+    //    but they still count toward total congregation in the Dashboard
+    await supabase.from('sheep').update({ shepherd_id: newShepherd.id, is_shepherd: true }).eq('id', sheepId);
 
     setShowPromoteModal(false);
     load();
@@ -239,8 +240,8 @@ export function ShepherdDetail() {
   }
 
   async function deleteShepherd() {
-    // Unassign sheep before deleting
-    await supabase.from('sheep').update({ shepherd_id: null }).eq('shepherd_id', id);
+    // Restore the shepherd's sheep record to normal member status
+    await supabase.from('sheep').update({ shepherd_id: null, is_shepherd: false }).eq('shepherd_id', id);
     await supabase.from('shepherd_tasks').delete().eq('shepherd_id', id);
     await supabase.from('outreach_reports').delete().eq('shepherd_id', id);
     await supabase.from('shepherds').delete().eq('id', id);

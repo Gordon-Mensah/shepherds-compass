@@ -84,10 +84,14 @@ export function SheepList() {
     } catch { return false; }
   }
 
-  const noShepherd = sheep.filter(s => !s.shepherd_id);
-  const birthdaysToday = sheep.filter(s => isBirthdayToday(s.date_of_birth));
+  // Shepherds have their own section — hide them from the members list
+  // They remain counted in the congregation total on the Dashboard
+  const members = sheep.filter(s => !s.is_shepherd);
 
-  const filtered = sheep.filter(s => {
+  const noShepherd = members.filter(s => !s.shepherd_id);
+  const birthdaysToday = members.filter(s => isBirthdayToday(s.date_of_birth));
+
+  const filtered = members.filter(s => {
     const matchSearch = s.name.toLowerCase().includes(search.toLowerCase()) ||
       (s.phone || '').includes(search);
     if (filter === 'no_shepherd') return matchSearch && !s.shepherd_id;
