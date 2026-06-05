@@ -10,6 +10,7 @@ import FirstTimers from './pages/FirstTimers';
 import Chat from './pages/Chat';
 import { CampaignsList, CampaignDetail } from './pages/Campaigns';
 import { Settings } from './pages/Misc';
+import CalendarPage from './pages/Calendar';
 
 export default function App() {
   return (
@@ -30,6 +31,7 @@ export default function App() {
           <Route path="/campaigns" element={<CampaignsList />} />
           <Route path="/campaigns/:id" element={<CampaignDetail />} />
           <Route path="/chat" element={<Chat />} />
+          <Route path="/calendar" element={<CalendarPage />} />
           <Route path="/settings" element={<Settings />} />
         </Routes>
       </div>

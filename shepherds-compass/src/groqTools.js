@@ -66,18 +66,16 @@ export const TOOLS = [
     type: 'function',
     function: {
       name: 'query_table',
-      description: 'Read rows from a Supabase table. Use this to look up shepherds, sheep, bacentas, tasks, reports, etc. before making changes.',
+      description: 'Read rows from a Supabase table. Use before any write/delete to get real UUIDs. Use search_name to find by name, filter_col+filter_val for exact column match.',
       parameters: {
         type: 'object',
         properties: {
-          table: { type: 'string', enum: ALLOWED_TABLES, description: 'Table to query' },
-          filters: {
-            type: 'object',
-            description: 'Key-value pairs to filter by, e.g. {"shepherd_id": "abc-123"} or {"name": "John"}',
-            additionalProperties: true,
-          },
-          limit: { type: 'integer', description: 'Max rows to return (default 100)' },
-          select: { type: 'string', description: 'Columns to select, e.g. "id,name,phone". Default is "*"' },
+          table:       { type: 'string', enum: ALLOWED_TABLES },
+          search_name: { type: 'string', description: 'Partial case-insensitive name search' },
+          filter_col:  { type: 'string', description: 'Column to filter by exactly, e.g. shepherd_id' },
+          filter_val:  { type: 'string', description: 'Value for filter_col' },
+          select:      { type: 'string', description: 'Columns to return e.g. id,name,phone. Default: all' },
+          limit:       { type: 'integer', description: 'Max rows, default 200' },
         },
         required: ['table'],
       },
@@ -87,14 +85,30 @@ export const TOOLS = [
     type: 'function',
     function: {
       name: 'insert_record',
-      description: 'Insert a single new record into a table (e.g. add one sheep or shepherd).',
+      description: 'Insert one new record. For sheep: fields are name,phone,email,address,shepherd_id,basonta,notes. For shepherds: name,phone,email,address,role,notes.',
       parameters: {
         type: 'object',
         properties: {
           table: { type: 'string', enum: ALLOWED_TABLES },
-          data: { type: 'object', description: 'Field values for the new record', additionalProperties: true },
+          name:    { type: 'string' },
+          phone:   { type: 'string' },
+          email:   { type: 'string' },
+          address: { type: 'string' },
+          notes:   { type: 'string' },
+          basonta: { type: 'string', description: 'Ministry group e.g. Media Team, Ushers, Film Stars' },
+          role:    { type: 'string', description: 'For shepherds: shepherd or leader' },
+          shepherd_id:      { type: 'string', description: 'UUID of assigned shepherd' },
+          bacenta_id:       { type: 'string', description: 'UUID of bacenta' },
+          first_timer:      { type: 'boolean' },
+          first_timer_date: { type: 'string' },
+          status:           { type: 'string' },
+          title:            { type: 'string' },
+          description:      { type: 'string' },
+          task_type:        { type: 'string' },
+          due_date:         { type: 'string' },
+          shepherd_id_task: { type: 'string' },
         },
-        required: ['table', 'data'],
+        required: ['table', 'name'],
       },
     },
   },
@@ -102,15 +116,27 @@ export const TOOLS = [
     type: 'function',
     function: {
       name: 'bulk_insert',
-      description: 'Insert multiple records at once. Use this when importing a member list, shepherd list, or any batch of records from a file.',
+      description: 'Insert multiple records at once from a file or list.',
       parameters: {
         type: 'object',
         properties: {
           table: { type: 'string', enum: ALLOWED_TABLES },
           rows: {
             type: 'array',
-            description: 'Array of record objects to insert',
-            items: { type: 'object', additionalProperties: true },
+            items: {
+              type: 'object',
+              properties: {
+                name:    { type: 'string' },
+                phone:   { type: 'string' },
+                email:   { type: 'string' },
+                address: { type: 'string' },
+                notes:   { type: 'string' },
+                basonta: { type: 'string' },
+                role:    { type: 'string' },
+                shepherd_id: { type: 'string' },
+                bacenta_id:  { type: 'string' },
+              },
+            },
           },
         },
         required: ['table', 'rows'],
@@ -121,15 +147,26 @@ export const TOOLS = [
     type: 'function',
     function: {
       name: 'update_record',
-      description: 'Update fields on an existing record by its UUID id.',
+      description: 'Update fields on one record by UUID. Always call query_table first to get the id.',
       parameters: {
         type: 'object',
         properties: {
-          table: { type: 'string', enum: ALLOWED_TABLES },
-          id: { type: 'string', description: 'UUID of the record to update' },
-          data: { type: 'object', description: 'Fields to update', additionalProperties: true },
+          table:   { type: 'string', enum: ALLOWED_TABLES },
+          id:      { type: 'string', description: 'UUID of record to update' },
+          name:    { type: 'string' },
+          phone:   { type: 'string' },
+          email:   { type: 'string' },
+          address: { type: 'string' },
+          notes:   { type: 'string' },
+          basonta: { type: 'string', description: 'Ministry group name' },
+          role:    { type: 'string' },
+          status:  { type: 'string' },
+          shepherd_id: { type: 'string' },
+          bacenta_id:  { type: 'string' },
+          title:       { type: 'string' },
+          due_date:    { type: 'string' },
         },
-        required: ['table', 'id', 'data'],
+        required: ['table', 'id'],
       },
     },
   },
@@ -137,12 +174,12 @@ export const TOOLS = [
     type: 'function',
     function: {
       name: 'delete_record',
-      description: 'Delete a single record by its UUID id. IMPORTANT: You must first call query_table to find the record UUID, then call delete_record with that UUID. Never guess UUIDs.',
+      description: 'Delete one record by UUID. Always call query_table first to find the UUID. Never guess.',
       parameters: {
         type: 'object',
         properties: {
           table: { type: 'string', enum: ALLOWED_TABLES },
-          id: { type: 'string', description: 'UUID of the record to delete' },
+          id:    { type: 'string', description: 'UUID of record to delete' },
         },
         required: ['table', 'id'],
       },
@@ -168,11 +205,11 @@ async function executeTool(name, args) {
 
   try {
     if (name === 'query_table') {
-      let q = supabase.from(args.table).select(args.select || '*').limit(args.limit || 100);
-      if (args.filters) {
-        for (const [col, val] of Object.entries(args.filters)) {
-          q = q.eq(col, val);
-        }
+      let q = supabase.from(args.table).select(args.select || '*').limit(args.limit || 200);
+      if (args.search_name) q = q.ilike('name', `%${args.search_name}%`);
+      if (args.filter_col && args.filter_val !== undefined) q = q.eq(args.filter_col, args.filter_val);
+      if (args.filters && typeof args.filters === 'object') {
+        for (const [col, val] of Object.entries(args.filters)) q = q.eq(col, val);
       }
       const { data, error } = await q;
       if (error) return { error: error.message };
@@ -180,7 +217,11 @@ async function executeTool(name, args) {
     }
 
     if (name === 'insert_record') {
-      const clean = sanitize(args.table, args.data);
+      // Support both flat fields (new schema) and args.data (legacy)
+      const flat = { ...args };
+      delete flat.table;
+      const raw = (args.data && typeof args.data === 'object') ? args.data : flat;
+      const clean = sanitize(args.table, raw);
       const { data, error } = await supabase.from(args.table).insert(clean).select();
       if (error) return { error: error.message };
       notifyChange(args.table);
@@ -188,7 +229,8 @@ async function executeTool(name, args) {
     }
 
     if (name === 'bulk_insert') {
-      const clean = args.rows.map(r => sanitize(args.table, r));
+      const rows = Array.isArray(args.rows) ? args.rows : [];
+      const clean = rows.map(r => sanitize(args.table, r));
       const { data, error } = await supabase.from(args.table).insert(clean).select();
       if (error) return { error: error.message };
       notifyChange(args.table);
@@ -196,7 +238,12 @@ async function executeTool(name, args) {
     }
 
     if (name === 'update_record') {
-      const clean = sanitize(args.table, args.data);
+      // Support both flat fields (new schema) and args.data (legacy)
+      const flat = { ...args };
+      delete flat.table;
+      delete flat.id;
+      const raw = (args.data && typeof args.data === 'object') ? args.data : flat;
+      const clean = sanitize(args.table, raw);
       const { data, error } = await supabase.from(args.table).update(clean).eq('id', args.id).select();
       if (error) return { error: error.message };
       notifyChange(args.table);
@@ -249,6 +296,8 @@ Rules:
 - To delete or update a record: ALWAYS call query_table first to get the record's UUID id, then call delete_record or update_record with that UUID. Do this as two separate tool calls in sequence.
 - When importing from a file, map columns intelligently (e.g. "full name" → name, "mobile" → phone).
 - For bulk imports, use bulk_insert not repeated insert_record calls.
+- When a CSV is attached, parse the rows from the document context directly. Each line after the header is one record. Map columns intelligently (name/full name → name, mobile/phone/tel → phone, etc).
+- If the document context is truncated, import only the rows you can see and tell the Chief Shepherd how many were imported.
 - If a bacenta or shepherd name is given but you need their UUID, query for it first.
 - Confirm what you did clearly and concisely at the end. Mention counts for bulk operations.
 - Be pastoral and respectful in tone. Address the user as "Chief Shepherd" when appropriate.`;
@@ -264,9 +313,21 @@ Rules:
 export async function runAgent(userMessage, conversationHistory = [], documentContext = null) {
   const memory = await loadMemory();
 
+  // Truncate and clean document context for tool-calling mode
+  // Shorter limit prevents 'failed_generation' errors from Groq
+  let safeDoc = null;
+  if (documentContext) {
+    safeDoc = documentContext
+      .replace(/[\u0000-\u001F\u007F-\u009F]/g, ' ') // remove control chars
+      .replace(/\s+/g, ' ')                              // collapse whitespace
+      .trim()
+      .slice(0, 4000);
+    if (documentContext.length > 4000) safeDoc += '\n[truncated — showing first 4000 chars]';
+  }
+
   const systemParts = [AGENT_SYSTEM];
   if (memory) systemParts.push(memory);
-  if (documentContext) systemParts.push(`---\nAttached document from Chief Shepherd:\n\n${documentContext}\n---`);
+  if (safeDoc) systemParts.push(`---\nAttached document from Chief Shepherd:\n\n${safeDoc}\n---`);
   const systemContent = systemParts.join('\n\n');
 
   const messages = [
@@ -285,6 +346,7 @@ export async function runAgent(userMessage, conversationHistory = [], documentCo
       messages,
       tools: TOOLS,
       tool_choice: 'auto',
+      parallel_tool_calls: false,
       max_tokens: 2048,
     });
 
@@ -305,9 +367,28 @@ export async function runAgent(userMessage, conversationHistory = [], documentCo
     // Execute each tool call and feed results back
     const toolResults = [];
     for (const tc of assistantMsg.tool_calls) {
-      const name = tc.function.name;
+      // Groq occasionally jams arguments into the tool name like:
+      //   query_table={"table":"sheep"} or query_table {"table":"sheep"}
+      // Detect and split on either = or space-before-{
+      let rawName = tc.function?.name || '';
+      let rawArgs = tc.function?.arguments || '{}';
+      const sepIdx = rawName.search(/[= ]\s*\{/);
+      if (sepIdx !== -1) {
+        const jsonPart = rawName.slice(sepIdx).replace(/^[= ]+/, '').trim();
+        rawName = rawName.slice(0, sepIdx).trim();
+        if (jsonPart.startsWith('{')) rawArgs = jsonPart;
+      }
+      const name = rawName;
       let args;
-      try { args = JSON.parse(tc.function.arguments); } catch { args = {}; }
+      try { args = JSON.parse(rawArgs); } catch { args = {}; }
+
+      // Guard: refuse bulk delete (no id = would delete all rows)
+      if (name === 'delete_record' && !args.id) {
+        const result = { error: 'Bulk delete is not permitted. A specific record id is required.' };
+        actions.push({ tool: name, args, result });
+        toolResults.push({ role: 'tool', tool_call_id: tc.id, content: JSON.stringify(result) });
+        continue;
+      }
 
       const result = await executeTool(name, args);
       actions.push({ tool: name, args, result });

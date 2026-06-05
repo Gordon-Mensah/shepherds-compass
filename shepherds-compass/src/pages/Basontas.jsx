@@ -1,3 +1,4 @@
+import SectionChat from '../components/SectionChat';
 import { useState, useEffect } from 'react';
 import { useDbRefresh } from '../useDbRefresh';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -18,9 +19,14 @@ export function BasonstasList() {
 
   async function load() {
     setLoading(true);
-    const { data } = await supabase.from('sheep').select('basonta').not('basonta', 'is', null);
+    // Count both regular members (sheep) AND shepherds in each basonta
+    const [{ data: sheepData }, { data: shepherdData }] = await Promise.all([
+      supabase.from('sheep').select('basonta').not('basonta', 'is', null),
+      supabase.from('shepherds').select('basonta').not('basonta', 'is', null),
+    ]);
     const counts = {};
-    (data || []).forEach(m => { if (m.basonta) counts[m.basonta] = (counts[m.basonta] || 0) + 1; });
+    (sheepData || []).forEach(m => { if (m.basonta) counts[m.basonta] = (counts[m.basonta] || 0) + 1; });
+    (shepherdData || []).forEach(s => { if (s.basonta) counts[s.basonta] = (counts[s.basonta] || 0) + 1; });
     setMemberCounts(counts);
     setLoading(false);
   }
@@ -30,6 +36,7 @@ export function BasonstasList() {
   const colors = ['var(--gold)', 'var(--blue)', 'var(--green)', 'var(--amber)', 'var(--red)', 'var(--text2)', 'var(--gold2)'];
 
   return (
+    <>
     <div style={{ flex: 1, padding: 'clamp(16px, 4vw, 32px)', overflowY: 'auto' }}>
       <PageHeader title="Basontas" subtitle="Church activity groups and ministries" />
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 16 }}>
@@ -45,6 +52,8 @@ export function BasonstasList() {
         ))}
       </div>
     </div>
+    <SectionChat section="basontas" pageContext={{ currentName: name }} />
+  </>
   );
 }
 
@@ -53,6 +62,7 @@ export function BasontaDetail() {
   const basontaName = decodeURIComponent(name);
   const navigate = useNavigate();
   const [members, setMembers] = useState([]);
+  const [shepherdMembers, setShepherdMembers] = useState([]);
   const [reports, setReports] = useState([]);
   const [showReportModal, setShowReportModal] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -62,11 +72,13 @@ export function BasontaDetail() {
 
   async function load() {
     setLoading(true);
-    const [{ data: mem }, { data: rep }] = await Promise.all([
+    const [{ data: mem }, { data: sheps }, { data: rep }] = await Promise.all([
       supabase.from('sheep').select('*, shepherds(name), bacentas(name)').eq('basonta', basontaName).order('name'),
+      supabase.from('shepherds').select('*, bacentas(name)').eq('basonta', basontaName).order('name'),
       supabase.from('basonta_reports').select('*').eq('basonta', basontaName).order('month', { ascending: false }),
     ]);
     setMembers(mem || []);
+    setShepherdMembers(sheps || []);
     setReports(rep || []);
     setLoading(false);
   }
@@ -87,30 +99,76 @@ export function BasontaDetail() {
 
   if (loading) return <Loader />;
 
+  const basontaShepherd = shepherdMembers.find(s => s.basonta_role === 'basonta_shepherd');
+  const totalCount = members.length + shepherdMembers.length;
+
   return (
     <div style={{ flex: 1, padding: 'clamp(16px, 4vw, 32px)', overflowY: 'auto' }}>
       <button onClick={() => navigate('/basontas')} style={{ background: 'none', color: 'var(--text2)', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 20, cursor: 'pointer', fontSize: 13 }}>
         <ArrowLeft size={14} /> Back to Basontas
       </button>
       <PageHeader title={basontaName}
-        subtitle={`${members.length} member${members.length !== 1 ? 's' : ''}`}
+        subtitle={`${totalCount} member${totalCount !== 1 ? 's' : ''} total`}
         actions={<Btn size="sm" onClick={() => setShowReportModal(true)}><Plus size={12} /> Add Monthly Report</Btn>}
       />
 
-      <Card style={{ marginBottom: 24 }}>
-        <h4 style={{ fontSize: 14, marginBottom: 12, color: 'var(--text2)' }}>Members</h4>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 10 }}>
-          {members.map(m => (
-            <div key={m.id} onClick={() => navigate(`/sheep/${m.id}`)}
-              style={{ padding: '10px 14px', background: 'var(--bg3)', borderRadius: 8, cursor: 'pointer', border: '1px solid var(--border)' }}>
-              <div style={{ fontWeight: 500, fontSize: 13 }}>{m.name}</div>
-              <div style={{ fontSize: 11, color: 'var(--text3)' }}>
-                {m.shepherds?.name || 'No shepherd'} · {m.bacentas?.name || 'No bacenta'}
-              </div>
+      {/* Basonta Shepherd (leader) highlight */}
+      {basontaShepherd && (
+        <Card style={{ marginBottom: 16, borderColor: 'var(--gold)', borderWidth: 2 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span style={{ fontSize: 20 }}>⭐</span>
+            <div>
+              <div style={{ fontSize: 12, color: 'var(--gold)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1 }}>Basonta Shepherd</div>
+              <div style={{ fontWeight: 600, fontSize: 15 }}>{basontaShepherd.name}</div>
+              {basontaShepherd.bacentas && <div style={{ fontSize: 11, color: 'var(--text3)' }}>{basontaShepherd.bacentas.name}</div>}
             </div>
-          ))}
-        </div>
-        {members.length === 0 && <p style={{ color: 'var(--text3)', fontSize: 13 }}>No members in this basonta yet. Assign members from the Sheep section.</p>}
+          </div>
+        </Card>
+      )}
+
+      <Card style={{ marginBottom: 24 }}>
+        <h4 style={{ fontSize: 14, marginBottom: 12, color: 'var(--text2)' }}>All Members</h4>
+
+        {/* Shepherd members */}
+        {shepherdMembers.length > 0 && (
+          <>
+            <div style={{ fontSize: 11, color: 'var(--text3)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.5 }}>Shepherds in this Basonta</div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 10, marginBottom: 16 }}>
+              {shepherdMembers.map(s => (
+                <div key={s.id} onClick={() => navigate(`/shepherds/${s.id}`)}
+                  style={{ padding: '10px 14px', background: 'var(--bg3)', borderRadius: 8, cursor: 'pointer', border: `1px solid ${s.basonta_role === 'basonta_shepherd' ? 'var(--gold)' : 'var(--border)'}` }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ fontWeight: 500, fontSize: 13 }}>{s.name}</div>
+                    <Badge color={s.basonta_role === 'basonta_shepherd' ? 'var(--gold)' : 'var(--blue)'}>
+                      {s.basonta_role === 'basonta_shepherd' ? 'Leader' : 'Shepherd'}
+                    </Badge>
+                  </div>
+                  <div style={{ fontSize: 11, color: 'var(--text3)' }}>{s.bacentas?.name || 'No bacenta'}</div>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+
+        {/* Regular members */}
+        {members.length > 0 && (
+          <>
+            {shepherdMembers.length > 0 && <div style={{ fontSize: 11, color: 'var(--text3)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.5 }}>Regular Members</div>}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 10 }}>
+              {members.map(m => (
+                <div key={m.id} onClick={() => navigate(`/sheep/${m.id}`)}
+                  style={{ padding: '10px 14px', background: 'var(--bg3)', borderRadius: 8, cursor: 'pointer', border: '1px solid var(--border)' }}>
+                  <div style={{ fontWeight: 500, fontSize: 13 }}>{m.name}</div>
+                  <div style={{ fontSize: 11, color: 'var(--text3)' }}>
+                    {m.shepherds?.name || 'No shepherd'} · {m.bacentas?.name || 'No bacenta'}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+
+        {totalCount === 0 && <p style={{ color: 'var(--text3)', fontSize: 13 }}>No members in this basonta yet. Assign members from the Sheep section, or assign shepherds from the Shepherds section.</p>}
       </Card>
 
       <h3 style={{ fontSize: 16, marginBottom: 14 }}>Monthly Reports</h3>

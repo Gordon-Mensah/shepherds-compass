@@ -1,3 +1,4 @@
+import SectionChat from '../components/SectionChat';
 import { useState, useEffect } from 'react';
 import { useDbRefresh } from '../useDbRefresh';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -154,6 +155,7 @@ export function BacentaDetail() {
           <ReportForm onSave={addReport} onClose={() => setShowReportModal(false)} />
         </Modal>
       )}
+      <SectionChat section="bacentas" pageContext={{ currentId: id }} />
     </div>
   );
 }

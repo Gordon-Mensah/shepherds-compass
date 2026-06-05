@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+// Chat.jsx — updated with rename + delete sessions (Claude-style) and Calendar integration
 
 function useIsMobile() {
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
@@ -139,12 +140,37 @@ function MemoryPanel({ onClose }) {
   );
 }
 
-// ── Sessions sidebar ──────────────────────────────────────────────────────────
-function SessionsSidebar({ sessions, activeId, onSelect, onNew, onDelete }) {
+// ── Sessions sidebar with rename + delete (Claude-style) ─────────────────────
+function SessionsSidebar({ sessions, activeId, onSelect, onNew, onDelete, onRename }) {
+  const [menuId, setMenuId] = useState(null);       // which session's context menu is open
+  const [renamingId, setRenamingId] = useState(null); // which session is being renamed
+  const [renameText, setRenameText] = useState('');
+
+  // Close menu on outside click
+  useEffect(() => {
+    const handler = () => setMenuId(null);
+    document.addEventListener('click', handler);
+    return () => document.removeEventListener('click', handler);
+  }, []);
+
+  function startRename(s, e) {
+    e.stopPropagation();
+    setMenuId(null);
+    setRenamingId(s.id);
+    setRenameText(s.title);
+  }
+
+  function commitRename(id) {
+    const val = renameText.trim();
+    if (val) onRename(id, val);
+    setRenamingId(null);
+    setRenameText('');
+  }
+
   return (
     <div style={{ width: 240, borderRight: '1px solid var(--border)', display: 'flex', flexDirection: 'column', background: 'var(--bg2)', flexShrink: 0, height: '100%' }}>
       <div style={{ padding: '14px 12px', borderBottom: '1px solid var(--border)' }}>
-        <button onClick={onNew} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderRadius: 8, background: 'var(--gold)', border: 'none', color: '#0b0f14', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
+        <button onClick={onNew} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderRadius: 8, background: 'var(--gold)', border: 'none', color: '#0b0f14', fontWeight: 600, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}>
           <Plus size={15} /> New Chat
         </button>
       </div>
@@ -152,28 +178,97 @@ function SessionsSidebar({ sessions, activeId, onSelect, onNew, onDelete }) {
         {sessions.length === 0 && (
           <div style={{ padding: '20px 12px', color: 'var(--text3)', fontSize: 12, textAlign: 'center' }}>No chats yet</div>
         )}
-        {sessions.map(s => (
-          <div key={s.id} onClick={() => onSelect(s.id)} style={{
-            padding: '9px 10px', borderRadius: 8, marginBottom: 2, cursor: 'pointer',
-            background: activeId === s.id ? 'var(--gold-dim)' : 'transparent',
-            border: `1px solid ${activeId === s.id ? 'var(--gold)' : 'transparent'}`,
-            display: 'flex', alignItems: 'flex-start', gap: 6, transition: 'all 0.1s',
-            position: 'relative',
-          }}>
-            <MessageSquare size={13} color={activeId === s.id ? 'var(--gold)' : 'var(--text3)'} style={{ marginTop: 2, flexShrink: 0 }} />
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 12, fontWeight: activeId === s.id ? 600 : 400, color: activeId === s.id ? 'var(--gold)' : 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.title}</div>
-              <div style={{ fontSize: 10, color: 'var(--text3)', marginTop: 1, display: 'flex', alignItems: 'center', gap: 3 }}>
-                <Clock size={9} /> {timeAgo(s.updated_at)}
+        {sessions.map(s => {
+          const isActive = activeId === s.id;
+          const isRenaming = renamingId === s.id;
+          const menuOpen = menuId === s.id;
+
+          return (
+            <div key={s.id}
+              onClick={() => { if (!isRenaming) onSelect(s.id); }}
+              style={{
+                padding: isRenaming ? '6px 8px' : '9px 10px',
+                borderRadius: 8, marginBottom: 2, cursor: isRenaming ? 'default' : 'pointer',
+                background: isActive ? 'var(--gold-dim)' : 'transparent',
+                border: `1px solid ${isActive ? 'var(--gold)' : 'transparent'}`,
+                display: 'flex', alignItems: 'flex-start', gap: 6, transition: 'all 0.1s',
+                position: 'relative',
+              }}
+              onMouseEnter={e => { if (!isRenaming) e.currentTarget.querySelector('.session-actions')?.style && (e.currentTarget.querySelector('.session-actions').style.opacity = '1'); }}
+              onMouseLeave={e => { if (!menuOpen) e.currentTarget.querySelector('.session-actions')?.style && (e.currentTarget.querySelector('.session-actions').style.opacity = '0'); }}
+            >
+              {!isRenaming && <MessageSquare size={13} color={isActive ? 'var(--gold)' : 'var(--text3)'} style={{ marginTop: 2, flexShrink: 0 }} />}
+
+              <div style={{ flex: 1, minWidth: 0 }}>
+                {isRenaming ? (
+                  <input
+                    value={renameText}
+                    onChange={e => setRenameText(e.target.value)}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter') { e.preventDefault(); commitRename(s.id); }
+                      if (e.key === 'Escape') { setRenamingId(null); setRenameText(''); }
+                    }}
+                    onBlur={() => commitRename(s.id)}
+                    autoFocus
+                    style={{ width: '100%', background: 'var(--bg)', border: '1px solid var(--gold)', borderRadius: 5, padding: '4px 8px', fontSize: 12, color: 'var(--text)', outline: 'none', fontFamily: 'inherit' }}
+                    onClick={e => e.stopPropagation()}
+                  />
+                ) : (
+                  <>
+                    <div style={{ fontSize: 12, fontWeight: isActive ? 600 : 400, color: isActive ? 'var(--gold)' : 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', paddingRight: 20 }}>
+                      {s.title}
+                    </div>
+                    <div style={{ fontSize: 10, color: 'var(--text3)', marginTop: 1, display: 'flex', alignItems: 'center', gap: 3 }}>
+                      <Clock size={9} /> {timeAgo(s.updated_at)}
+                    </div>
+                  </>
+                )}
               </div>
+
+              {/* Three-dot menu button — visible on hover or when menu is open */}
+              {!isRenaming && (
+                <div className="session-actions" style={{ position: 'absolute', right: 6, top: 8, opacity: menuOpen || isActive ? 1 : 0, transition: 'opacity 0.1s' }}>
+                  <button
+                    onClick={e => { e.stopPropagation(); setMenuId(menuOpen ? null : s.id); }}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text3)', padding: '2px 4px', borderRadius: 4, display: 'flex', alignItems: 'center', lineHeight: 1 }}
+                    title="Options"
+                  >
+                    <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor">
+                      <circle cx="8" cy="2.5" r="1.5"/><circle cx="8" cy="8" r="1.5"/><circle cx="8" cy="13.5" r="1.5"/>
+                    </svg>
+                  </button>
+
+                  {/* Dropdown context menu */}
+                  {menuOpen && (
+                    <div
+                      onClick={e => e.stopPropagation()}
+                      style={{ position: 'absolute', right: 0, top: 22, background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 8, minWidth: 140, zIndex: 300, boxShadow: '0 4px 20px rgba(0,0,0,0.4)', overflow: 'hidden' }}>
+                      <button
+                        onClick={e => startRename(s, e)}
+                        style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 8, padding: '9px 12px', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text)', fontSize: 12, fontFamily: 'inherit', textAlign: 'left' }}
+                        onMouseEnter={e => e.currentTarget.style.background = 'var(--surface)'}
+                        onMouseLeave={e => e.currentTarget.style.background = 'none'}
+                      >
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                        Rename
+                      </button>
+                      <div style={{ height: 1, background: 'var(--border)' }} />
+                      <button
+                        onClick={e => { e.stopPropagation(); setMenuId(null); onDelete(s.id); }}
+                        style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 8, padding: '9px 12px', background: 'none', border: 'none', cursor: 'pointer', color: '#f87171', fontSize: 12, fontFamily: 'inherit', textAlign: 'left' }}
+                        onMouseEnter={e => e.currentTarget.style.background = 'rgba(248,113,113,0.08)'}
+                        onMouseLeave={e => e.currentTarget.style.background = 'none'}
+                      >
+                        <Trash2 size={13} />
+                        Delete chat
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
-            <button onClick={e => { e.stopPropagation(); onDelete(s.id); }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text3)', padding: 2, opacity: 0, position: 'absolute', right: 6, top: 8 }}
-              onMouseEnter={e => e.currentTarget.style.opacity = 1}
-              onMouseLeave={e => e.currentTarget.style.opacity = 0}>
-              <X size={11} />
-            </button>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
@@ -262,6 +357,11 @@ export default function Chat() {
       }
       return next;
     });
+  }
+
+  async function renameSession(id, newTitle) {
+    await supabase.from('chat_sessions').update({ title: newTitle }).eq('id', id);
+    setSessions(prev => prev.map(s => s.id === id ? { ...s, title: newTitle } : s));
   }
 
   async function updateSessionTitle(sessionId, msgs) {
@@ -412,6 +512,7 @@ export default function Chat() {
           onSelect={(id) => { openSession(id); if (isMobile) setShowSidebar(false); }}
           onNew={() => { newChat(); if (isMobile) setShowSidebar(false); }}
           onDelete={deleteSession}
+          onRename={renameSession}
         />
       </div>
 

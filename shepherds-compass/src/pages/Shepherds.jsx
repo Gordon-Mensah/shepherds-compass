@@ -1,3 +1,4 @@
+import SectionChat from '../components/SectionChat';
 import { useState, useEffect } from 'react';
 import { useDbRefresh } from '../useDbRefresh';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -55,6 +56,13 @@ export function ShepherdsList() {
               <Badge color={s.role === 'leader' ? 'var(--gold)' : 'var(--blue)'}>{s.role}</Badge>
             </div>
             {s.phone && <p style={{ fontSize: 12, color: 'var(--text3)' }}>📞 {s.phone}</p>}
+            {s.basonta && (
+              <div style={{ marginTop: 8 }}>
+                <Badge color={s.basonta_role === 'basonta_shepherd' ? 'var(--gold)' : 'var(--text2)'}>
+                  {s.basonta_role === 'basonta_shepherd' ? '⭐ ' : ''}{s.basonta}
+                </Badge>
+              </div>
+            )}
           </Card>
         ))}
         {shepherds.length === 0 && <EmptyState message="No shepherds yet. Add your first shepherd." icon="🐑" />}
@@ -63,6 +71,7 @@ export function ShepherdsList() {
       {showModal && (
         <ShepherdModal bacentas={bacentas} onSave={addShepherd} onClose={() => setShowModal(false)} />
       )}
+      <SectionChat section="shepherds" />
     </div>
   );
 }
@@ -153,6 +162,11 @@ export function ShepherdDetail() {
           <div style={{ display: 'flex', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
             <Badge color={shepherd.role === 'leader' ? 'var(--gold)' : 'var(--blue)'}>{shepherd.role}</Badge>
             {shepherd.bacentas && <Badge color="var(--text2)">{shepherd.bacentas.name}</Badge>}
+            {shepherd.basonta && (
+              <Badge color={shepherd.basonta_role === 'basonta_shepherd' ? 'var(--gold)' : 'var(--blue)'}>
+                {shepherd.basonta_role === 'basonta_shepherd' ? '⭐ Basonta Shepherd — ' : ''}{shepherd.basonta}
+              </Badge>
+            )}
           </div>
         </div>
         <div style={{ display: 'flex', gap: 10 }}>
@@ -278,13 +292,14 @@ export function ShepherdDetail() {
 
       {showTaskModal && <TaskModal onSave={addTask} onClose={() => setShowTaskModal(false)} />}
       {showOutreachModal && <OutreachModal onSave={addOutreach} onClose={() => setShowOutreachModal(false)} />}
+      <SectionChat section="shepherds" pageContext={{ currentId: id }} />
     </div>
   );
 }
 
 // ─── Modals ───────────────────────────────────────────────────────
 function ShepherdModal({ onSave, onClose, bacentas }) {
-  const [form, setForm] = useState({ name: '', phone: '', address: '', email: '', role: 'shepherd', bacenta_id: '' });
+  const [form, setForm] = useState({ name: '', phone: '', address: '', email: '', role: 'shepherd', bacenta_id: '', basonta: '', basonta_role: 'member' });
   const s = k => v => setForm(f => ({ ...f, [k]: v.target.value }));
   return (
     <Modal title="Add Shepherd" onClose={onClose}>
@@ -304,6 +319,20 @@ function ShepherdModal({ onSave, onClose, bacentas }) {
           {bacentas.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
         </select>
       </FormField>
+      <FormField label="Basonta (Activity Group)">
+        <select value={form.basonta} onChange={s('basonta')}>
+          <option value="">None</option>
+          {BASONTAS.map(b => <option key={b} value={b}>{b}</option>)}
+        </select>
+      </FormField>
+      {form.basonta && (
+        <FormField label="Role in Basonta">
+          <select value={form.basonta_role} onChange={s('basonta_role')}>
+            <option value="member">Member</option>
+            <option value="basonta_shepherd">Basonta Shepherd (Leader)</option>
+          </select>
+        </FormField>
+      )}
       <Btn onClick={() => form.name && onSave(form)} style={{ width: '100%', justifyContent: 'center' }}>Save Shepherd</Btn>
     </Modal>
   );

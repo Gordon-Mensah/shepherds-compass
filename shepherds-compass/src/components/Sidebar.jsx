@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
-import { Users, BookOpen, Music, MessageSquare, LayoutDashboard, UserPlus, Megaphone, Settings } from 'lucide-react';
+import { Users, BookOpen, Music, MessageSquare, LayoutDashboard, UserPlus, Megaphone, Settings, Calendar } from 'lucide-react';
 
 const links = [
   { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
@@ -10,6 +10,7 @@ const links = [
   { to: '/basontas', icon: Music, label: 'Basontas' },
   { to: '/first-timers', icon: UserPlus, label: 'First Timers' },
   { to: '/campaigns', icon: Megaphone, label: 'Campaigns' },
+  { to: '/calendar', icon: Calendar, label: 'Calendar & Tasks' },
   { to: '/chat', icon: MessageSquare, label: 'AI Assistant' },
   { to: '/settings', icon: Settings, label: 'Settings' },
 ];
@@ -18,8 +19,8 @@ const mobileLinks = [
   { to: '/', icon: LayoutDashboard, label: 'Home' },
   { to: '/shepherds', icon: Users, label: 'Shepherds' },
   { to: '/sheep', icon: BookOpen, label: 'Sheep' },
+  { to: '/calendar', icon: Calendar, label: 'Calendar' },
   { to: '/chat', icon: MessageSquare, label: 'AI' },
-  { to: '/settings', icon: Settings, label: 'More' },
 ];
 
 function useIsMobile() {
@@ -38,7 +39,6 @@ export default function Sidebar() {
   if (isMobile) {
     return (
       <>
-        {/* Mobile bottom nav */}
         <nav style={{
           display: 'flex', position: 'fixed', bottom: 0, left: 0, right: 0,
           background: 'var(--bg2)', borderTop: '1px solid var(--border)',
@@ -50,7 +50,7 @@ export default function Sidebar() {
               padding: '8px 4px',
               color: isActive ? 'var(--gold)' : 'var(--text3)',
               fontSize: 10, fontWeight: isActive ? 600 : 400,
-              flex: 1, transition: 'color 0.15s',
+              flex: 1, transition: 'color 0.15s', textDecoration: 'none',
             })}>
               <Icon size={20} />
               {label}
@@ -61,7 +61,6 @@ export default function Sidebar() {
     );
   }
 
-  // Desktop sidebar
   return (
     <aside style={{
       width: 'var(--sidebar-w)', background: 'var(--bg2)',
@@ -84,7 +83,7 @@ export default function Sidebar() {
             color: isActive ? 'var(--gold)' : 'var(--text2)',
             background: isActive ? 'var(--gold-dim)' : 'transparent',
             fontSize: 13, fontWeight: isActive ? 500 : 400,
-            transition: 'all 0.15s',
+            transition: 'all 0.15s', textDecoration: 'none',
           })}>
             <Icon size={16} />
             {label}
@@ -93,7 +92,7 @@ export default function Sidebar() {
       </nav>
 
       <div style={{ padding: '16px 20px', borderTop: '1px solid var(--border)', color: 'var(--text3)', fontSize: 11 }}>
-        Shepherd's Compass v1.0
+        Shepherd's Compass v1.1
       </div>
     </aside>
   );

@@ -38,7 +38,10 @@ export default function Dashboard() {
         supabase.from('sheep').select('id, name, date_of_birth, shepherd_id').eq('is_active', true),
       ]);
 
-      setStats({ shepherdCount, sheepCount, bacentaCount, firstTimerCount, doneTasks, pendingTasks });
+      // Total attendance = members (sheep) + shepherds (who are also members of the congregation)
+      const totalAttendance = (sheepCount || 0) + (shepherdCount || 0);
+
+      setStats({ shepherdCount, sheepCount, bacentaCount, firstTimerCount, doneTasks, pendingTasks, totalAttendance });
       setRecentTasks(tasks || []);
 
       // Birthday check
@@ -106,9 +109,9 @@ export default function Dashboard() {
       )}
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 16, marginBottom: 32 }}>
-        <StatBox label="Active Shepherds" value={stats.shepherdCount || 0} icon={<Users size={20} />} color="var(--gold)" />
-        <StatBox label="Church Members" value={stats.sheepCount || 0} icon={<BookOpen size={20} />} color="var(--blue)" />
-        <StatBox label="Bacentas" value={stats.bacentaCount || 0} icon={<Music size={20} />} color="var(--green)" />
+        <StatBox label="Total Congregation" value={stats.totalAttendance || 0} icon={<Users size={20} />} color="var(--gold)" />
+        <StatBox label="Active Members" value={stats.sheepCount || 0} icon={<BookOpen size={20} />} color="var(--blue)" />
+        <StatBox label="Shepherds" value={stats.shepherdCount || 0} icon={<Users size={20} />} color="var(--green)" />
         <StatBox label="First Timers" value={stats.firstTimerCount || 0} icon={<UserPlus size={20} />} color="var(--amber)" />
         <StatBox label="Tasks Done" value={stats.doneTasks || 0} icon={<CheckCircle size={20} />} color="var(--green)" />
         <StatBox label="Tasks Pending" value={stats.pendingTasks || 0} icon={<Clock size={20} />} color="var(--red)" />

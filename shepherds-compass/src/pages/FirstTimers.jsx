@@ -1,3 +1,4 @@
+import SectionChat from '../components/SectionChat';
 import { useState, useEffect } from 'react';
 import { useDbRefresh } from '../useDbRefresh';
 import { useNavigate } from 'react-router-dom';
@@ -40,6 +41,7 @@ export default function FirstTimers() {
   if (loading) return <Loader />;
 
   return (
+    <>
     <div style={{ flex: 1, padding: 'clamp(16px, 4vw, 32px)', overflowY: 'auto' }}>
       <PageHeader
         title="First Timers"
@@ -77,6 +79,8 @@ export default function FirstTimers() {
         <FirstTimerModal shepherds={shepherds} bacentas={bacentas} onSave={addFirstTimer} onClose={() => setShowModal(false)} />
       )}
     </div>
+    <SectionChat section="firstTimers" />
+  </>
   );
 }
 

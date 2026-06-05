@@ -1,3 +1,4 @@
+import SectionChat from '../components/SectionChat';
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../supabase';
@@ -321,6 +322,7 @@ export function CampaignDetail() {
           <CampaignForm initial={campaign} onSave={updateCampaign} onClose={() => setShowEditModal(false)} />
         </Modal>
       )}
+      <SectionChat section="campaigns" pageContext={{ currentId: id }} />
     </div>
   );
 }

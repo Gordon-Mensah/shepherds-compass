@@ -1,3 +1,4 @@
+import SectionChat from '../components/SectionChat';
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../supabase';
@@ -328,6 +329,7 @@ export function SheepDetail() {
       {showEditModal && (
         <SheepModal initial={member} shepherds={shepherds} bacentas={bacentas} onSave={updateMember} onClose={() => setShowEditModal(false)} />
       )}
+      <SectionChat section="sheep" pageContext={{ currentId: id }} />
     </div>
   );
 }
