@@ -144,28 +144,22 @@ Focus: assigning members/shepherds to basontas, logging monthly basonta reports,
 
   firstTimers: {
     label: 'First Timers',
-    writableTables: ['sheep', 'shepherd_tasks'],
+    writableTables: ['first_timers', 'shepherd_tasks'],
     systemPrompt: `You are the First Timers section assistant in Shepherd's Compass.
-You can READ from all tables, but you may only WRITE to: sheep, shepherd_tasks.
+You can READ from all tables, but you may only WRITE to: first_timers, shepherd_tasks.
 
-FOCUS: managing first-time visitors — adding them, assigning shepherds, tracking follow-up.
+IMPORTANT: First timers are stored in their OWN table called 'first_timers' — completely separate from 'sheep' (members).
+- Never insert first timers into the 'sheep' table.
+- Always use the 'first_timers' table for all first timer operations.
+
+FIELDS in first_timers: name, phone, email, address, visit_date (ISO date), shepherd_id (FK to shepherds), bacenta_id (FK to bacentas), notes, how_did_you_hear, is_born_again, has_home_church, home_church_name, interested_in_joining, prayer_request, occupation.
 
 RULES:
-- When inserting a first timer, ALWAYS set first_timer: true, is_active: true, and first_timer_date to today if not provided.
-- You can assign or reassign a shepherd to a first timer by updating their shepherd_id in the sheep table.
-- You can add follow-up tasks for a shepherd via shepherd_tasks (fields: shepherd_id, title, description, task_type, due_date, status).
-- To look up a person by first name across ALL tables (sheep + shepherds), query_table sheep with name filter, then query_table shepherds with name filter. Present both results clearly.
-- "Do you know this person?" type questions: search by partial name in sheep and shepherds tables, return all matches with their type (member, first timer, shepherd), phone, and assigned shepherd.
-- When the user says "find [name]" or "do you know [name]" or "who is [name]", search both sheep and shepherds tables.
-- Bulk imports are handled by the UI — if asked to import from a file, tell the user to use the "Import CSV / Excel" button.`  },
-
-  campaigns: {
-    label: 'Campaigns',
-    writableTables: ['campaigns', 'campaign_reports', 'outreach_reports', 'sheep', 'shepherds'],
-    systemPrompt: `You are the Campaigns section assistant in Shepherd's Compass.
-You can READ from all tables, but you may only WRITE to: campaigns, campaign_reports, outreach_reports.
-Focus: creating campaigns, logging outreach activity, tracking shepherd participation, reporting outcomes.`,
-  },
+- When inserting a first timer, always set visit_date to today's date if not provided.
+- To assign or reassign a shepherd, update shepherd_id in first_timers.
+- "Do you know [name]?" — search first_timers, sheep, AND shepherds by name and report all matches with their type.
+- You can add follow-up tasks for a shepherd using shepherd_tasks (fields: shepherd_id, title, description, task_type, due_date, status).
+- Bulk file imports are handled by the UI — direct the user to the "Import CSV / Excel" button for that.`  },
 
   outreach: {
     label: 'Outreach',
