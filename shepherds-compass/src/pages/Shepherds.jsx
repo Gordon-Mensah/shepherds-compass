@@ -251,12 +251,40 @@ export function ShepherdDetail() {
   // ── Tasks ────────────────────────────────────────────────────────
   async function addTask(data) {
     await supabase.from('shepherd_tasks').insert({ ...data, shepherd_id: id });
+
+    // Auto-add deadline to calendar if a due_date was set
+    if (data.due_date) {
+      await supabase.from('calendar_events').insert({
+        title: `⏰ ${shepherd.name}: ${data.title}`,
+        event_date: data.due_date,
+        event_type: 'deadline',
+        description: data.description || `Task assigned to ${shepherd.name}`,
+      });
+    }
+
     setShowTaskModal(false);
     load();
   }
 
   async function updateTask(taskId, data) {
     await supabase.from('shepherd_tasks').update(data).eq('id', taskId);
+
+    // Sync calendar: update or insert the deadline event
+    if (data.due_date) {
+      const eventTitle = `⏰ ${shepherd.name}: ${data.title}`;
+      const { data: existing } = await supabase
+        .from('calendar_events')
+        .select('id')
+        .eq('event_type', 'deadline')
+        .ilike('title', `%${data.title}%`)
+        .limit(1);
+      if (existing && existing.length > 0) {
+        await supabase.from('calendar_events').update({ event_date: data.due_date, title: eventTitle }).eq('id', existing[0].id);
+      } else {
+        await supabase.from('calendar_events').insert({ title: eventTitle, event_date: data.due_date, event_type: 'deadline', description: `Task assigned to ${shepherd.name}` });
+      }
+    }
+
     setShowEditTaskModal(null);
     load();
   }
