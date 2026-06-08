@@ -11,6 +11,8 @@ import {
   FileSpreadsheet, HelpCircle, Users,
 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
+import { checkDuplicateName, getExistingNames } from '../checkDuplicate';
+import DuplicateNameField from '../components/DuplicateNameField';
 import * as XLSX from 'xlsx';
 
 // ─── CSV/XLSX flexible column matching ───────────────────────────────────────
@@ -380,7 +382,12 @@ function FirstTimerModal({ onSave, onClose, shepherds, bacentas, ft, editMode })
   return (
     <Modal title={editMode ? `Edit — ${ft?.name}` : 'Register First Timer'} onClose={onClose}>
       <p style={{ fontSize: 11, color: 'var(--gold)', fontWeight: 600, marginBottom: 12, letterSpacing: '0.05em' }}>BASIC INFORMATION</p>
-      <FormField label="Full Name *"><input value={form.name} onChange={s('name')} autoFocus /></FormField>
+          <DuplicateNameField
+        value={form.name}
+        onChange={v => setForm(f => ({ ...f, name: v }))}
+        excludeId={ft?.id}
+        autoFocus
+      />
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
         <FormField label="Phone"><input value={form.phone} onChange={s('phone')} /></FormField>
         <FormField label="Email"><input value={form.email} onChange={s('email')} type="email" /></FormField>
@@ -453,12 +460,17 @@ function ImportModal({ shepherds, onImport, onClose }) {
 
   async function runImport() {
     setImporting(true);
+    const existingNames = await getExistingNames();
+    const dupes = rows.filter(r => existingNames.has(r.name.trim().toLowerCase())).map(r => r.name);
     const error = await onImport(rows, shepherdId || null);
     setImporting(false);
     if (error) {
       setErrors([error.message || 'Import failed. Please check your data.']);
     } else {
       setImportResult(rows.length);
+      if (dupes.length > 0) {
+        setErrors([`⚠️ Possible duplicates: ${dupes.join(', ')}`]);
+      }
       setStep('done');
     }
   }

@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { useDbRefresh } from '../useDbRefresh';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../supabase';
+import DuplicateNameField from '../components/DuplicateNameField';
 import { generateShepherdSummary } from '../groq';
 import { BASONTAS, TASK_TYPES, STATUS_COLORS } from '../constants';
 import { Card, Badge, Btn, PageHeader, Modal, FormField, EmptyState, Loader, GoodBadBetter } from '../components/ui';
@@ -651,9 +652,12 @@ function ShepherdModal({ onSave, onClose, bacentas, shepherd, editMode }) {
 
   return (
     <Modal title={editMode ? `Edit — ${shepherd?.name}` : 'Add New Shepherd'} onClose={onClose}>
-      <FormField label="Full Name *">
-        <input value={form.name} onChange={s('name')} placeholder="e.g. James Mensah" />
-      </FormField>
+      <DuplicateNameField
+        value={form.name}
+        onChange={v => setForm(f => ({ ...f, name: v }))}
+        excludeId={shepherd?.id}
+        autoFocus
+      />
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
         <FormField label="Phone">
           <input value={form.phone} onChange={s('phone')} placeholder="+233..." />

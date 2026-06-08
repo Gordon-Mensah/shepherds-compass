@@ -5,6 +5,8 @@ import { supabase } from '../supabase';
 import { useDbRefresh } from '../useDbRefresh';
 import { BASONTAS } from '../constants';
 import { Card, Badge, Btn, PageHeader, Modal, FormField, EmptyState, Loader } from '../components/ui';
+import { checkDuplicateName, getExistingNames } from '../checkDuplicate';
+import DuplicateNameField from '../components/DuplicateNameField';
 import { Plus, ArrowLeft, Search, Upload, AlertCircle } from 'lucide-react';
 import { format, isToday, parseISO } from 'date-fns';
 
@@ -356,7 +358,12 @@ function SheepModal({ onSave, onClose, shepherds, bacentas, initial }) {
   const s = k => v => setForm(f => ({ ...f, [k]: v.target ? v.target.value : v }));
   return (
     <Modal title={initial ? 'Edit Member' : 'Add Church Member'} onClose={onClose}>
-      <FormField label="Full Name *"><input value={form.name} onChange={s('name')} /></FormField>
+      <DuplicateNameField
+        value={form.name}
+        onChange={v => setForm(f => ({ ...f, name: v }))}
+        excludeId={initial?.id}
+        autoFocus
+      />
       <FormField label="Phone"><input value={form.phone} onChange={s('phone')} /></FormField>
       <FormField label="Email"><input value={form.email} onChange={s('email')} /></FormField>
       <FormField label="Address"><input value={form.address} onChange={s('address')} /></FormField>
@@ -443,8 +450,11 @@ function ImportModal({ onDone, onClose, shepherds, bacentas }) {
 
   async function importAll() {
     setStep('importing');
+    // Pre-fetch all existing names to flag duplicates
+    const existingNames = await getExistingNames();
     let done = 0;
     const errs = [];
+    const dupeWarnings = [];
     for (const row of rows) {
       try {
         const record = {
@@ -453,6 +463,9 @@ function ImportModal({ onDone, onClose, shepherds, bacentas }) {
           shepherd_id: defaultShepherd || null,
           bacenta_id: defaultBacenta || null,
         };
+        if (existingNames.has(row.name.trim().toLowerCase())) {
+          dupeWarnings.push(row.name);
+        }
         const { error } = await supabase.from('sheep').insert(record);
         if (error) errs.push(`${row.name}: ${error.message}`);
       } catch (e) {
@@ -460,6 +473,9 @@ function ImportModal({ onDone, onClose, shepherds, bacentas }) {
       }
       done++;
       setProgress(Math.round((done / rows.length) * 100));
+    }
+    if (dupeWarnings.length > 0) {
+      errs.unshift(`⚠️ Possible duplicates imported: ${dupeWarnings.join(', ')}`);
     }
     setErrors(errs);
     setStep('done');
