@@ -1,5 +1,7 @@
 import './index.css';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider, useAuth } from './AuthContext';
+import Login from './pages/Login';
 import Sidebar from './components/Sidebar';
 import Dashboard from './pages/Dashboard';
 import { ShepherdsList, ShepherdDetail } from './pages/Shepherds';
@@ -11,10 +13,35 @@ import Chat from './pages/Chat';
 import { CampaignsList, CampaignDetail } from './pages/Campaigns';
 import { Settings } from './pages/Misc';
 import CalendarPage from './pages/Calendar';
+import DuplicateManager from './pages/DuplicateManager';
 
-export default function App() {
+// ─── Protected layout — only renders if user is logged in ────────────────────
+function ProtectedApp() {
+  const { user } = useAuth();
+
+  // Still loading session
+  if (user === undefined) {
+    return (
+      <div style={{
+        minHeight: '100vh', display: 'flex', alignItems: 'center',
+        justifyContent: 'center', background: 'var(--bg)',
+      }}>
+        <div style={{
+          width: 36, height: 36, border: '3px solid var(--border)',
+          borderTopColor: 'var(--gold)', borderRadius: '50%',
+          animation: 'spin 0.7s linear infinite',
+        }} />
+        <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
+      </div>
+    );
+  }
+
+  // Not logged in — show login page
+  if (!user) return <Login />;
+
+  // Logged in — show the full app
   return (
-    <BrowserRouter>
+    <>
       <Sidebar />
       <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
         <Routes>
@@ -33,8 +60,21 @@ export default function App() {
           <Route path="/chat" element={<Chat />} />
           <Route path="/calendar" element={<CalendarPage />} />
           <Route path="/settings" element={<Settings />} />
+          <Route path="/duplicates" element={<DuplicateManager />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </div>
+    </>
+  );
+}
+
+// ─── Root — wraps everything in Auth + Router ─────────────────────────────────
+export default function App() {
+  return (
+    <BrowserRouter>
+      <AuthProvider>
+        <ProtectedApp />
+      </AuthProvider>
     </BrowserRouter>
   );
 }

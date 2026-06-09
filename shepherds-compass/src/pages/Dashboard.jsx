@@ -29,17 +29,24 @@ export default function Dashboard() {
         { data: allSheep },
       ] = await Promise.all([
         supabase.from('shepherds').select('*', { count: 'exact', head: true }),
-        supabase.from('sheep').select('*', { count: 'exact', head: true }).eq('is_active', true),
+        // Members = active sheep who are NOT shepherds (shepherds shown separately)
+        supabase.from('sheep').select('*', { count: 'exact', head: true }).eq('is_active', true).eq('is_shepherd', false),
         supabase.from('bacentas').select('*', { count: 'exact', head: true }),
         supabase.from('sheep').select('*', { count: 'exact', head: true }).eq('first_timer', true),
         supabase.from('shepherd_tasks').select('*, shepherds(name)').order('created_at', { ascending: false }).limit(6),
         supabase.from('shepherd_tasks').select('*', { count: 'exact', head: true }).eq('status', 'done'),
         supabase.from('shepherd_tasks').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
-        supabase.from('sheep').select('id, name, date_of_birth, shepherd_id').eq('is_active', true),
+        supabase.from('sheep').select('id, name, date_of_birth, shepherd_id').eq('is_active', true).eq('is_shepherd', false),
       ]);
 
-      // Total attendance = members (sheep) + shepherds (who are also members of the congregation)
-      const totalAttendance = (sheepCount || 0) + (shepherdCount || 0);
+      // Total congregation:
+      //   - All active sheep (includes those marked is_shepherd=true who were promoted from members)
+      //   - Plus shepherds who were added directly (they have no sheep record)
+      const { count: allSheepCount } = await supabase.from('sheep').select('*', { count: 'exact', head: true }).eq('is_active', true);
+      const { data: shepherdIds } = await supabase.from('sheep').select('shepherd_id').eq('is_shepherd', true).not('shepherd_id', 'is', null);
+      const promotedIds = new Set((shepherdIds || []).map(r => r.shepherd_id));
+      const directShepherds = (shepherdCount || 0) - promotedIds.size;
+      const totalAttendance = (allSheepCount || 0) + Math.max(0, directShepherds);
 
       setStats({ shepherdCount, sheepCount, bacentaCount, firstTimerCount, doneTasks, pendingTasks, totalAttendance });
       setRecentTasks(tasks || []);

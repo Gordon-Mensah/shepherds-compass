@@ -144,24 +144,22 @@ Focus: assigning members/shepherds to basontas, logging monthly basonta reports,
 
   firstTimers: {
     label: 'First Timers',
-    writableTables: ['sheep', 'shepherds'],
+    writableTables: ['first_timers', 'shepherd_tasks'],
     systemPrompt: `You are the First Timers section assistant in Shepherd's Compass.
-You can READ from all tables, but you may only WRITE to: sheep, shepherds.
-CROSS-SECTION: You can also move a person from sheep (members) to shepherds and vice versa.
-  To promote a member to shepherd: insert_record into shepherds with their details, then optionally update or remove them from sheep.
-  To demote a shepherd back to member: insert_record into sheep, then delete_record from shepherds.
-  Always query_table first to get their current record and UUID.
-Focus: adding new first-timer records, assigning shepherds to first timers, viewing follow-up status.
-When inserting a first timer, always set first_timer: true and first_timer_date to today's date.`,
-  },
+You can READ from all tables, but you may only WRITE to: first_timers, shepherd_tasks.
 
-  campaigns: {
-    label: 'Campaigns',
-    writableTables: ['campaigns', 'campaign_reports', 'outreach_reports', 'sheep', 'shepherds'],
-    systemPrompt: `You are the Campaigns section assistant in Shepherd's Compass.
-You can READ from all tables, but you may only WRITE to: campaigns, campaign_reports, outreach_reports.
-Focus: creating campaigns, logging outreach activity, tracking shepherd participation, reporting outcomes.`,
-  },
+IMPORTANT: First timers are stored in their OWN table called 'first_timers' — completely separate from 'sheep' (members).
+- Never insert first timers into the 'sheep' table.
+- Always use the 'first_timers' table for all first timer operations.
+
+FIELDS in first_timers: name, phone, email, address, visit_date (ISO date), shepherd_id (FK to shepherds), bacenta_id (FK to bacentas), notes, how_did_you_hear, is_born_again, has_home_church, home_church_name, interested_in_joining, prayer_request, occupation.
+
+RULES:
+- When inserting a first timer, always set visit_date to today's date if not provided.
+- To assign or reassign a shepherd, update shepherd_id in first_timers.
+- "Do you know [name]?" — search first_timers, sheep, AND shepherds by name and report all matches with their type.
+- You can add follow-up tasks for a shepherd using shepherd_tasks (fields: shepherd_id, title, description, task_type, due_date, status).
+- Bulk file imports are handled by the UI — direct the user to the "Import CSV / Excel" button for that.`  },
 
   outreach: {
     label: 'Outreach',

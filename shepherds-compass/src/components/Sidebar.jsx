@@ -1,6 +1,7 @@
+import { useAuth } from '../AuthContext';
 import { useState, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
-import { Users, BookOpen, Music, MessageSquare, LayoutDashboard, UserPlus, Megaphone, Settings, Calendar } from 'lucide-react';
+import { Users, BookOpen, Music, MessageSquare, LayoutDashboard, UserPlus, Megaphone, Settings, Calendar, GitMerge, LogOut } from 'lucide-react';
 
 const links = [
   { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
@@ -12,6 +13,7 @@ const links = [
   { to: '/campaigns', icon: Megaphone, label: 'Campaigns' },
   { to: '/calendar', icon: Calendar, label: 'Calendar & Tasks' },
   { to: '/chat', icon: MessageSquare, label: 'AI Assistant' },
+  { to: '/duplicates', icon: GitMerge, label: 'Duplicate Manager' },
   { to: '/settings', icon: Settings, label: 'Settings' },
 ];
 
@@ -34,6 +36,7 @@ function useIsMobile() {
 }
 
 export default function Sidebar() {
+  const { user, signOut } = useAuth();
   const isMobile = useIsMobile();
 
   if (isMobile) {
@@ -91,8 +94,28 @@ export default function Sidebar() {
         ))}
       </nav>
 
-      <div style={{ padding: '16px 20px', borderTop: '1px solid var(--border)', color: 'var(--text3)', fontSize: 11 }}>
-        Shepherd's Compass v1.1
+      <div style={{ padding: '12px 16px', borderTop: '1px solid var(--border)' }}>
+        {user && (
+          <div style={{ marginBottom: 10, padding: '8px 10px', background: 'var(--surface)', borderRadius: 8, border: '1px solid var(--border)' }}>
+            <p style={{ fontSize: 10, color: 'var(--text3)', marginBottom: 2, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Signed in as</p>
+            <p style={{ fontSize: 11, color: 'var(--text2)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.email}</p>
+          </div>
+        )}
+        <button
+          onClick={signOut}
+          style={{
+            width: '100%', display: 'flex', alignItems: 'center', gap: 8,
+            padding: '8px 10px', borderRadius: 8, background: 'none',
+            border: '1px solid var(--border)', cursor: 'pointer',
+            color: 'var(--text3)', fontSize: 12, fontFamily: 'inherit',
+            transition: 'all 0.15s',
+          }}
+          onMouseEnter={e => { e.currentTarget.style.color = '#f87171'; e.currentTarget.style.borderColor = 'rgba(248,113,113,0.4)'; }}
+          onMouseLeave={e => { e.currentTarget.style.color = 'var(--text3)'; e.currentTarget.style.borderColor = 'var(--border)'; }}
+        >
+          <LogOut size={13} /> Sign Out
+        </button>
+        <p style={{ fontSize: 10, color: 'var(--text3)', marginTop: 10, textAlign: 'center' }}>Shepherd's Compass v1.1</p>
       </div>
     </aside>
   );
