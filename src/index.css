@@ -1,0 +1,189 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0b0f14;
+  --bg2: #111720;
+  --bg3: #182030;
+  --surface: #1a2538;
+  --surface2: #223049;
+  --border: #2a3f5f;
+  --border2: #3a5070;
+  --gold: #c9a84c;
+  --gold2: #e8c86a;
+  --gold-dim: rgba(201,168,76,0.15);
+  --gold-glow: rgba(201,168,76,0.08);
+  --text: #e8e4da;
+  --text2: #a8b4c4;
+  --text3: #6a7f98;
+  --green: #4caf82;
+  --green-dim: rgba(76,175,130,0.15);
+  --red: #e05c5c;
+  --red-dim: rgba(224,92,92,0.15);
+  --amber: #e09a3c;
+  --amber-dim: rgba(224,154,60,0.15);
+  --blue: #5b8dee;
+  --blue-dim: rgba(91,141,238,0.15);
+  --sidebar-w: 240px;
+  --radius: 10px;
+  --shadow: 0 4px 20px rgba(0,0,0,0.4);
+}
+
+html, body { height: 100%; background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 14px; line-height: 1.6; }
+
+#root { height: 100%; display: flex; }
+
+h1, h2, h3, h4 { font-family: 'Cormorant Garamond', serif; font-weight: 600; color: var(--text); }
+
+a { text-decoration: none; color: inherit; }
+
+button { cursor: pointer; font-family: 'DM Sans', sans-serif; border: none; outline: none; }
+
+input, textarea, select {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 13px;
+  outline: none;
+  width: 100%;
+  transition: border-color 0.2s;
+}
+input:focus, textarea:focus, select:focus { border-color: var(--gold); }
+textarea { resize: vertical; min-height: 80px; }
+select option { background: var(--bg3); }
+
+.scrollbar::-webkit-scrollbar { width: 5px; }
+.scrollbar::-webkit-scrollbar-track { background: transparent; }
+.scrollbar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+
+/* ── Mobile responsiveness ─────────────────────────────────────────── */
+
+.sidebar-desktop {
+  width: var(--sidebar-w);
+  background: var(--bg2);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  height: 100vh;
+  position: sticky;
+  top: 0;
+}
+
+.mobile-topbar {
+  display: none;
+}
+
+.mobile-bottomnav {
+  display: none;
+}
+
+/* Page content padding helper */
+.page-content {
+  flex: 1;
+  padding: 32px;
+  overflow-y: auto;
+}
+
+@media (max-width: 768px) {
+  :root {
+    --sidebar-w: 0px;
+  }
+
+  #root {
+    flex-direction: column;
+    height: 100dvh;
+  }
+
+  #root > div {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .sidebar-desktop {
+    display: none;
+  }
+
+  .mobile-topbar {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 14px 16px 12px;
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    flex-shrink: 0;
+  }
+
+  .mobile-bottomnav {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--bg2);
+    border-top: 1px solid var(--border);
+    z-index: 100;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  /* Give all pages bottom padding so content isn't hidden under bottom nav */
+  #root > div > div {
+    padding-bottom: 80px !important;
+  }
+
+  /* Tighten page padding on mobile */
+  div[style*="padding: 32px"],
+  div[style*="padding: '32px'"] {
+    padding: 16px !important;
+  }
+
+  /* Stack dashboard 2-col grid to 1 col */
+  div[style*="gridTemplateColumns: '1fr 1fr'"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* PageHeader — stack title and action button */
+  div[style*="justifyContent: 'space-between'"][style*="alignItems: 'flex-start'"] {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  /* Make search + filter wrap on mobile */
+  div[style*="display: 'flex'"][style*="gap: 12"] {
+    flex-wrap: wrap;
+  }
+
+  /* Full width search on mobile */
+  div[style*="maxWidth: 300"] {
+    max-width: 100% !important;
+  }
+
+  /* Modal full screen on mobile */
+  div[style*="maxWidth: 560"] {
+    max-width: 100% !important;
+    max-height: 100% !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+  }
+
+  div[style*="alignItems: 'center'"][style*="justifyContent: 'center'"][style*="position: 'fixed'"] {
+    align-items: flex-end !important;
+    padding: 0 !important;
+  }
+
+  /* Shepherd detail: stack the two-column layout */
+  div[style*="display: 'flex'"][style*="gap: 24"] {
+    flex-direction: column !important;
+  }
+}

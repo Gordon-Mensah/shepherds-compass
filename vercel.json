@@ -1,0 +1,6 @@
+{
+  "name": "shepherds-compass",
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}
